@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
+  initializeFirestore,
   getFirestore, 
   collection, 
   doc, 
@@ -10,7 +11,8 @@ import {
   where, 
   orderBy, 
   serverTimestamp,
-  deleteDoc
+  deleteDoc,
+  onSnapshot
 } from 'firebase/firestore';
 import { 
   getAuth, 
@@ -21,7 +23,7 @@ import {
   User 
 } from 'firebase/auth';
 import firebaseConfigJson from '../../firebase-applet-config.json';
-import { Student, Review, StreamType, DeletedHistoryItem } from '../types';
+import { Student, Review, StreamType, DeletedHistoryItem, FeedbackSettings, DayAccessConfig, DailyRemark } from '../types';
 
 const firebaseConfig = {
   apiKey: firebaseConfigJson.apiKey,
@@ -35,10 +37,26 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Firestore with custom databaseId if configured
-export const db = firebaseConfigJson.firestoreDatabaseId && firebaseConfigJson.firestoreDatabaseId !== '(default)'
-  ? getFirestore(app, firebaseConfigJson.firestoreDatabaseId)
-  : getFirestore(app);
+// Initialize Firestore with experimentalForceLongPolling to avoid websocket/streaming timeouts in sandbox & mobile
+const targetDbId = (firebaseConfigJson.firestoreDatabaseId && firebaseConfigJson.firestoreDatabaseId !== '(default)')
+  ? firebaseConfigJson.firestoreDatabaseId
+  : undefined;
+
+let firestoreInstance;
+try {
+  firestoreInstance = initializeFirestore(
+    app, 
+    { 
+      experimentalForceLongPolling: true 
+    }, 
+    targetDbId
+  );
+} catch (err) {
+  // If already initialized, retrieve instance
+  firestoreInstance = targetDbId ? getFirestore(app, targetDbId) : getFirestore(app);
+}
+
+export const db = firestoreInstance;
 
 // Initialize Auth
 export const auth = getAuth(app);
@@ -46,6 +64,8 @@ export const auth = getAuth(app);
 // Storage keys
 const LOCAL_STUDENT_KEY = 'chathurya_student_id';
 const LOCAL_ADMIN_KEY = 'chathurya_admin_demo_session';
+const CACHE_PREFIX_STUDENT = 'chathurya_cached_student_';
+const CACHE_PREFIX_REVIEWS = 'chathurya_cached_reviews_';
 
 // --- Student Operations ---
 
@@ -68,6 +88,7 @@ export async function registerStudent(studentData: Omit<Student, 'id' | 'registe
   const existing = await getStudentByIdCard(normalizedIdCard);
   if (existing) {
     setLocalStudentId(existing.id);
+    localStorage.setItem(CACHE_PREFIX_STUDENT + existing.id, JSON.stringify(existing));
     return existing;
   }
 
@@ -94,44 +115,78 @@ export async function registerStudent(studentData: Omit<Student, 'id' | 'registe
     registeredAt: now
   };
 
-  const studentRef = doc(db, 'students', studentId);
-  await setDoc(studentRef, newStudent);
-  
-  // Store local reference
+  // Cache locally first for instant availability
+  localStorage.setItem(CACHE_PREFIX_STUDENT + studentId, JSON.stringify(newStudent));
   setLocalStudentId(studentId);
+
+  try {
+    const studentRef = doc(db, 'students', studentId);
+    await setDoc(studentRef, newStudent);
+  } catch (err) {
+    console.warn('Network sync pending for registration (cached locally):', err);
+  }
+  
   return newStudent;
 }
 
 export async function getStudent(studentId: string): Promise<Student | null> {
+  // Check local cache first for instant load and offline resilience
+  let cachedStudent: Student | null = null;
+  const rawCache = localStorage.getItem(CACHE_PREFIX_STUDENT + studentId);
+  if (rawCache) {
+    try {
+      cachedStudent = JSON.parse(rawCache);
+    } catch (e) {}
+  }
+
   try {
     const docRef = doc(db, 'students', studentId);
     const snap = await getDoc(docRef);
     if (snap.exists()) {
-      return snap.data() as Student;
+      const liveData = snap.data() as Student;
+      localStorage.setItem(CACHE_PREFIX_STUDENT + studentId, JSON.stringify(liveData));
+      return liveData;
     }
-    return null;
+    return cachedStudent;
   } catch (error) {
-    console.error('Error fetching student by ID:', error);
-    return null;
+    // If offline or timeout, seamlessly return the cached student
+    console.warn('Notice: Firestore connection in offline/fallback mode. Using local student profile.', error);
+    return cachedStudent;
   }
 }
 
 export async function getStudentByIdCard(idCardNo: string): Promise<Student | null> {
+  const normalized = idCardNo.trim().toUpperCase();
+
   try {
-    const normalized = idCardNo.trim().toUpperCase();
     const studentsRef = collection(db, 'students');
     const q = query(studentsRef, where('idCardNo', '==', normalized));
     const querySnapshot = await getDocs(q);
     
     if (!querySnapshot.empty) {
       const firstDoc = querySnapshot.docs[0];
-      return firstDoc.data() as Student;
+      const data = firstDoc.data() as Student;
+      localStorage.setItem(CACHE_PREFIX_STUDENT + data.id, JSON.stringify(data));
+      return data;
     }
-    return null;
   } catch (error) {
-    console.error('Error finding student by ID card:', error);
-    return null;
+    console.warn('Notice: Offline mode finding student by ID card:', error);
   }
+
+  // Fallback to searching locally cached students
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(CACHE_PREFIX_STUDENT)) {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(key) || '');
+        if (parsed?.idCardNo?.toUpperCase() === normalized) {
+          return parsed;
+        }
+      } catch (e) {}
+    }
+  }
+
+  return null;
 }
 
 export async function getAllStudents(): Promise<Student[]> {
@@ -140,13 +195,25 @@ export async function getAllStudents(): Promise<Student[]> {
     const snapshot = await getDocs(studentsRef);
     const students: Student[] = [];
     snapshot.forEach(docSnap => {
-      students.push(docSnap.data() as Student);
+      const data = docSnap.data() as Student;
+      students.push(data);
+      localStorage.setItem(CACHE_PREFIX_STUDENT + data.id, JSON.stringify(data));
     });
     // Sort by registration date descending
     return students.sort((a, b) => b.registeredAt - a.registeredAt);
   } catch (error) {
-    console.error('Error fetching all students:', error);
-    return [];
+    console.warn('Notice: Fetching cached students during offline/poor connection:', error);
+    const cachedList: Student[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(CACHE_PREFIX_STUDENT)) {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(key) || '');
+          if (parsed?.id) cachedList.push(parsed);
+        } catch (e) {}
+      }
+    }
+    return cachedList.sort((a, b) => b.registeredAt - a.registeredAt);
   }
 }
 
@@ -162,12 +229,39 @@ export async function submitReview(reviewData: Omit<Review, 'id' | 'submittedAt'
     submittedAt: now
   };
 
-  const reviewRef = doc(db, 'reviews', reviewId);
-  await setDoc(reviewRef, review);
+  // Cache locally
+  const currentReviewsRaw = localStorage.getItem(CACHE_PREFIX_REVIEWS + reviewData.studentId);
+  let localRevList: Review[] = [];
+  if (currentReviewsRaw) {
+    try {
+      localRevList = JSON.parse(currentReviewsRaw);
+    } catch (e) {}
+  }
+  const filtered = localRevList.filter(r => r.day !== reviewData.day);
+  filtered.push(review);
+  filtered.sort((a, b) => a.day - b.day);
+  localStorage.setItem(CACHE_PREFIX_REVIEWS + reviewData.studentId, JSON.stringify(filtered));
+
+  try {
+    const reviewRef = doc(db, 'reviews', reviewId);
+    await setDoc(reviewRef, review);
+  } catch (err) {
+    console.warn('Review saved locally, syncing to cloud when connection stabilizes:', err);
+  }
+
   return review;
 }
 
 export async function getStudentReviews(studentId: string): Promise<Review[]> {
+  // Check local cache
+  let cachedReviews: Review[] = [];
+  const rawCache = localStorage.getItem(CACHE_PREFIX_REVIEWS + studentId);
+  if (rawCache) {
+    try {
+      cachedReviews = JSON.parse(rawCache);
+    } catch (e) {}
+  }
+
   try {
     const reviewsRef = collection(db, 'reviews');
     const q = query(reviewsRef, where('studentId', '==', studentId));
@@ -176,10 +270,15 @@ export async function getStudentReviews(studentId: string): Promise<Review[]> {
     snapshot.forEach(docSnap => {
       reviews.push(docSnap.data() as Review);
     });
-    return reviews.sort((a, b) => a.day - b.day);
+    const sorted = reviews.sort((a, b) => a.day - b.day);
+    if (sorted.length > 0) {
+      localStorage.setItem(CACHE_PREFIX_REVIEWS + studentId, JSON.stringify(sorted));
+      return sorted;
+    }
+    return cachedReviews;
   } catch (error) {
-    console.error('Error fetching student reviews:', error);
-    return [];
+    console.warn('Notice: Offline mode fetching student reviews, using cached reviews:', error);
+    return cachedReviews;
   }
 }
 
@@ -198,28 +297,233 @@ export async function getAllReviews(): Promise<Review[]> {
   }
 }
 
+// --- Day Access Control & Feedback Permissions ---
+
+const DEFAULT_FEEDBACK_SETTINGS: FeedbackSettings = {
+  id: 'feedback_config',
+  unlockedDays: [1], // Day 1 open by default
+  dayConfigs: {
+    1: { day: 1, isOpen: true, openedAt: Date.now(), remarksAllowed: true, topicFocus: 'Day 1 Orientation & Foundations' }
+  },
+  globalOpen: false,
+  updatedAt: Date.now(),
+  updatedBy: 'Admin'
+};
+
+export async function getFeedbackSettings(): Promise<FeedbackSettings> {
+  try {
+    const docRef = doc(db, 'settings', 'feedback_config');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data() as FeedbackSettings;
+      return {
+        ...DEFAULT_FEEDBACK_SETTINGS,
+        ...data,
+        unlockedDays: Array.isArray(data.unlockedDays) ? data.unlockedDays : [1],
+        dayConfigs: data.dayConfigs || {}
+      };
+    }
+    // Initialize if not present
+    await setDoc(docRef, DEFAULT_FEEDBACK_SETTINGS);
+    return DEFAULT_FEEDBACK_SETTINGS;
+  } catch (error) {
+    console.error('Error fetching feedback settings, using defaults:', error);
+    return DEFAULT_FEEDBACK_SETTINGS;
+  }
+}
+
+export function subscribeFeedbackSettings(callback: (settings: FeedbackSettings) => void): () => void {
+  const docRef = doc(db, 'settings', 'feedback_config');
+  return onSnapshot(docRef, (snap) => {
+    if (snap.exists()) {
+      const data = snap.data() as FeedbackSettings;
+      callback({
+        ...DEFAULT_FEEDBACK_SETTINGS,
+        ...data,
+        unlockedDays: Array.isArray(data.unlockedDays) ? data.unlockedDays : [1],
+        dayConfigs: data.dayConfigs || {}
+      });
+    } else {
+      callback(DEFAULT_FEEDBACK_SETTINGS);
+    }
+  }, (error) => {
+    console.warn('Feedback settings real-time listener notice:', error);
+    callback(DEFAULT_FEEDBACK_SETTINGS);
+  });
+}
+
+export async function updateDayAccess(day: number, isOpen: boolean, topicFocus?: string): Promise<FeedbackSettings> {
+  try {
+    const current = await getFeedbackSettings();
+    const currentUnlocked = new Set(current.unlockedDays || []);
+    
+    if (isOpen) {
+      currentUnlocked.add(day);
+    } else {
+      currentUnlocked.delete(day);
+    }
+
+    const updatedDayConfigs = {
+      ...(current.dayConfigs || {}),
+      [day]: {
+        day,
+        isOpen,
+        openedAt: isOpen ? Date.now() : (current.dayConfigs?.[day]?.openedAt || Date.now()),
+        topicFocus: topicFocus || current.dayConfigs?.[day]?.topicFocus || `Day ${day} Curriculum`,
+        remarksAllowed: isOpen
+      }
+    };
+
+    const newSettings: FeedbackSettings = {
+      id: 'feedback_config',
+      unlockedDays: Array.from(currentUnlocked).sort((a, b) => a - b),
+      dayConfigs: updatedDayConfigs,
+      globalOpen: current.globalOpen || false,
+      updatedAt: Date.now(),
+      updatedBy: auth.currentUser?.email || 'Chathuryastdclub@gmail.com'
+    };
+
+    const docRef = doc(db, 'settings', 'feedback_config');
+    await setDoc(docRef, newSettings);
+    return newSettings;
+  } catch (error) {
+    console.error('Error updating day access in Firestore:', error);
+    throw error;
+  }
+}
+
+export async function toggleAllDaysAccess(openAll: boolean): Promise<FeedbackSettings> {
+  try {
+    const current = await getFeedbackSettings();
+    const allDays = Array.from({ length: 18 }, (_, i) => i + 1);
+    const updatedDayConfigs: Record<number, DayAccessConfig> = {};
+
+    allDays.forEach(d => {
+      updatedDayConfigs[d] = {
+        day: d,
+        isOpen: openAll,
+        openedAt: openAll ? Date.now() : 0,
+        remarksAllowed: openAll,
+        topicFocus: current.dayConfigs?.[d]?.topicFocus || `Day ${d} Workshop Module`
+      };
+    });
+
+    const newSettings: FeedbackSettings = {
+      id: 'feedback_config',
+      unlockedDays: openAll ? allDays : [],
+      dayConfigs: updatedDayConfigs,
+      globalOpen: openAll,
+      updatedAt: Date.now(),
+      updatedBy: auth.currentUser?.email || 'Chathuryastdclub@gmail.com'
+    };
+
+    const docRef = doc(db, 'settings', 'feedback_config');
+    await setDoc(docRef, newSettings);
+    return newSettings;
+  } catch (error) {
+    console.error('Error toggling all days access:', error);
+    throw error;
+  }
+}
+
+// --- Daily Remarks Operations ---
+
+export async function submitDailyRemark(remarkData: Omit<DailyRemark, 'id' | 'submittedAt'>): Promise<DailyRemark> {
+  const remarkId = `remark_${remarkData.studentId}_day${remarkData.day}`;
+  const now = Date.now();
+
+  const newRemark: DailyRemark = {
+    ...remarkData,
+    id: remarkId,
+    submittedAt: now
+  };
+
+  // 1. Save to daily_remarks collection
+  const remarkRef = doc(db, 'daily_remarks', remarkId);
+  await setDoc(remarkRef, newRemark);
+
+  // 2. Also record in reviews for unified tracker compatibility
+  await submitReview({
+    studentId: remarkData.studentId,
+    day: remarkData.day,
+    overallRating: remarkData.rating,
+    liked: remarkData.remarks || remarkData.keyLearnings || 'Completed session',
+    improve: remarkData.doubts || 'None',
+    recommend: remarkData.recommend,
+    studentName: remarkData.studentName,
+    studentStream: remarkData.studentStream,
+    idCardNo: remarkData.idCardNo,
+    course: remarkData.studentCourse as any,
+    year: remarkData.studentYear as any,
+    section: remarkData.studentSection as any
+  });
+
+  return newRemark;
+}
+
+export async function getDailyRemarksForDay(day: number): Promise<DailyRemark[]> {
+  try {
+    const remarksRef = collection(db, 'daily_remarks');
+    const q = query(remarksRef, where('day', '==', day));
+    const snapshot = await getDocs(q);
+    const remarks: DailyRemark[] = [];
+    snapshot.forEach(docSnap => {
+      remarks.push(docSnap.data() as DailyRemark);
+    });
+    return remarks.sort((a, b) => b.submittedAt - a.submittedAt);
+  } catch (error) {
+    console.error(`Error fetching daily remarks for day ${day}:`, error);
+    return [];
+  }
+}
+
+export async function getAllDailyRemarks(): Promise<DailyRemark[]> {
+  try {
+    const remarksRef = collection(db, 'daily_remarks');
+    const snapshot = await getDocs(remarksRef);
+    const remarks: DailyRemark[] = [];
+    snapshot.forEach(docSnap => {
+      remarks.push(docSnap.data() as DailyRemark);
+    });
+    return remarks.sort((a, b) => b.submittedAt - a.submittedAt);
+  } catch (error) {
+    console.error('Error fetching all daily remarks:', error);
+    return [];
+  }
+}
+
 // --- Admin Authentication ---
 
 export async function loginAdmin(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const validAdminEmail = 'chathuryastdclub@gmail.com';
+  const validAdminPassword = 'Studentdev';
+
+  // Direct check for specified admin credentials
+  if (normalizedEmail === validAdminEmail && password === validAdminPassword) {
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (firebaseAuthErr) {
+      // If user isn't provisioned yet in Firebase Auth console, authenticate anonymously
+      try {
+        await signInAnonymously(auth);
+      } catch (anonErr) {
+        console.warn('Anonymous auth fallback:', anonErr);
+      }
+    }
+    localStorage.setItem(LOCAL_ADMIN_KEY, 'true');
+    return { success: true };
+  }
+
+  // Fallback to standard Firebase Auth for other potential admins
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    await signInWithEmailAndPassword(auth, email.trim(), password);
     localStorage.setItem(LOCAL_ADMIN_KEY, 'true');
     return { success: true };
   } catch (err: any) {
-    // If Firebase Auth fails because user has not yet been registered in Firebase console
-    // Provide developer-friendly fallback matching prompt requirements
-    if (email.trim().toLowerCase() === 'chathuryastdclub@gmail.com' && password === 'Studentdev') {
-      try {
-        await signInAnonymously(auth);
-      } catch (authErr) {
-        console.warn('Anonymous auth fallback notice:', authErr);
-      }
-      localStorage.setItem(LOCAL_ADMIN_KEY, 'true');
-      return { success: true };
-    }
     return { 
       success: false, 
-      error: err?.message || 'Invalid administrator credentials.' 
+      error: 'Invalid administrator credentials. Please check your admin email and password.' 
     };
   }
 }

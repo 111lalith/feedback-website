@@ -56,17 +56,18 @@ export const AdminLoginPage: React.FC = () => {
           
           {/* Header */}
           <div className="text-center space-y-3 mb-6">
-            <ChathuryaLogo size="lg" layout="vertical" className="mb-2" />
+            <div className="flex justify-center">
+              <ChathuryaLogo size="lg" showTagline={true} />
+            </div>
             
-            <h1 className="text-xl font-bold text-white font-sans">
+            <h1 className="text-xl font-bold text-white font-sans mt-2">
               Admin Command Portal
             </h1>
             
             <p className="text-xs text-gray-400 font-mono">
-              Workshop Analytics & Directory Management
+              Workshop Daily Access & Evaluation Engine
             </p>
           </div>
-
 
           {error && (
             <div className="mb-5 flex items-start gap-2 bg-red-950/40 border border-red-500/50 rounded-xl p-3 text-xs text-red-200">

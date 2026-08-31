@@ -2,172 +2,106 @@ import React from 'react';
 
 interface ChathuryaLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  layout?: 'horizontal' | 'vertical' | 'badge';
   className?: string;
   showTagline?: boolean;
 }
 
 export const ChathuryaLogo: React.FC<ChathuryaLogoProps> = ({
   size = 'md',
-  layout = 'horizontal',
   className = '',
   showTagline = true
 }) => {
-  // Dimension scales matching exact proportions from screenshot
-  const dimensions述 = {
-    sm: { 
-      cardPadding: 'px-3 py-2.5',
-      symbolWidth: 54, 
-      symbolHeight: 28, 
-      titleSize: 'text-sm tracking-normal font-normal', 
-      taglineSize: 'text-[9px] tracking-wider font-bold', 
-      gap: 'gap-1',
-      hGap: 'gap-2.5'
-    },
-    md: { 
-      cardPadding: 'px-4 py-3',
-      symbolWidth: 78, 
-      symbolHeight: 40, 
-      titleSize: 'text-lg tracking-normal font-normal', 
-      taglineSize: 'text-[10px] sm:text-[11px] tracking-wider font-bold', 
-      gap: 'gap-1.5',
-      hGap: 'gap-3'
-    },
-    lg: { 
-      cardPadding: 'px-6 py-5',
-      symbolWidth: 120, 
-      symbolHeight: 62, 
-      titleSize: 'text-2xl sm:text-3xl tracking-normal font-normal', 
-      taglineSize: 'text-xs sm:text-sm tracking-wider font-bold', 
+  const config = {
+    sm: {
+      symbolWidth: 32,
+      symbolHeight: 16,
+      titleSize: 'text-sm font-extrabold tracking-wider',
+      taglineSize: 'text-[7.5px] font-bold tracking-[0.14em]',
       gap: 'gap-2',
-      hGap: 'gap-4'
+      textGap: 'gap-0.5'
     },
-    xl: { 
-      cardPadding: 'px-8 py-7',
-      symbolWidth: 170, 
-      symbolHeight: 88, 
-      titleSize: 'text-4xl tracking-normal font-normal', 
-      taglineSize: 'text-sm sm:text-base tracking-wider font-bold', 
-      gap: 'gap-2.5',
-      hGap: 'gap-5'
+    md: {
+      symbolWidth: 44,
+      symbolHeight: 22,
+      titleSize: 'text-base sm:text-lg font-extrabold tracking-wider',
+      taglineSize: 'text-[8.5px] sm:text-[9.5px] font-bold tracking-[0.16em]',
+      gap: 'gap-2.5 sm:gap-3',
+      textGap: 'gap-0.5'
+    },
+    lg: {
+      symbolWidth: 64,
+      symbolHeight: 32,
+      titleSize: 'text-2xl sm:text-3xl font-extrabold tracking-wider',
+      taglineSize: 'text-xs sm:text-sm font-bold tracking-[0.18em]',
+      gap: 'gap-3 sm:gap-4',
+      textGap: 'gap-1'
+    },
+    xl: {
+      symbolWidth: 84,
+      symbolHeight: 42,
+      titleSize: 'text-3xl sm:text-4xl font-extrabold tracking-wider',
+      taglineSize: 'text-sm sm:text-base font-bold tracking-[0.2em]',
+      gap: 'gap-4 sm:gap-5',
+      textGap: 'gap-1'
     }
   }[size];
 
-  // Exact 1:1 Vector CX Infinity Glyph
-  // - Clean vertical inner stem for 'C' on left
-  // - Upper and lower curves merging into the 'X' crossing
-  // - Right loop mirroring the infinity loop
-  // - Top and bottom right stems terminating cleanly at the vertical boundary
-  const CXSymbol = (
+  // Neon CX Infinity Symbol matching exact geometry from user screenshot
+  const CXGlyph = (
     <svg
-      width={dimensions述.symbolWidth}
-      height={dimensions述.symbolHeight}
-      viewBox="0 0 200 100"
+      width={config.symbolWidth}
+      height={config.symbolHeight}
+      viewBox="0 0 100 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="shrink-0"
+      className="shrink-0 drop-shadow-[0_0_8px_rgba(198,255,0,0.35)]"
     >
-      {/* C on left with vertical inner edge */}
+      {/* Top arc of C */}
       <path
-        d="M 74 18 
-           C 42 18, 18 32, 18 50 
-           C 18 68, 42 82, 74 82"
-        stroke="#D4FF00"
-        strokeWidth="20"
-        strokeLinecap="butt"
-        strokeLinejoin="miter"
+        d="M 33 8 C 21 8 9 14 9 22"
+        stroke="#C6FF00"
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-
-      {/* Infinity / X intersecting on right with vertical inner edge */}
+      {/* Bottom arc of C */}
       <path
-        d="M 86 18 
-           C 96 18, 106 32, 114 50 
-           C 122 68, 138 82, 158 82 
-           C 178 82, 188 68, 188 50 
-           C 188 32, 178 18, 158 18 
-           C 138 18, 122 32, 114 50 
-           C 106 68, 96 82, 86 82"
-        stroke="#D4FF00"
-        strokeWidth="20"
-        strokeLinecap="butt"
-        strokeLinejoin="miter"
+        d="M 9 26 C 9 34 21 40 33 40"
+        stroke="#C6FF00"
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Right Infinity / X crossing Loop */}
+      <path
+        d="M 33 40 C 43 40 52 32 60 24 L 68 15 C 74 8 84 8 90 14 C 96 20 96 28 90 34 C 84 40 74 40 68 33 L 60 24 C 52 16 43 8 33 8"
+        stroke="#C6FF00"
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
 
-  // Full Card Badge Layout matching the uploaded logo screenshot
-  if (layout === 'vertical' || layout === 'badge') {
-    return (
-      <div 
-        className={`inline-flex flex-col items-center justify-center text-center rounded-xl bg-[#2A2E2B] border border-[#3A403B] shadow-lg ${dimensions述.cardPadding} ${dimensions述.gap} ${className}`}
-      >
-        {/* Symbol */}
-        <div className="flex items-center justify-center my-0.5">
-          {CXSymbol}
-        </div>
-
-        {/* Brand Name "Chathurya" */}
-        <div className="flex flex-col items-center justify-center">
-          <span 
-            className={`text-[#D4FF00] ${dimensions述.titleSize} leading-none`}
-            style={{ 
-              fontFamily: "'Space Grotesk', system-ui, -apple-system, sans-serif",
-              letterSpacing: '0.01em'
-            }}
-          >
-            Chathurya
-          </span>
-
-          {/* Tagline "<STUDENT DEVELOPERS CLUB>" */}
-          {showTagline && (
-            <span 
-              className={`text-[#C2C9C2] ${dimensions述.taglineSize} leading-none mt-1`}
-              style={{ 
-                fontFamily: "'JetBrains Mono', monospace",
-                letterSpacing: '0.04em'
-              }}
-            >
-              &lt;STUDENT DEVELOPERS CLUB&gt;
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Horizontal Header / Inline Layout
   return (
-    <div className={`flex items-center ${dimensions述.hGap} ${className}`}>
-      {/* Dark container for CX Symbol */}
-      <div className="p-1.5 sm:p-2 rounded-xl bg-[#2A2E2B] border border-[#3A403B] flex items-center justify-center">
-        {CXSymbol}
-      </div>
-
-      {/* Brand Text Lockup */}
-      <div className="flex flex-col justify-center">
+    <div className={`inline-flex items-center ${config.gap} select-none ${className}`}>
+      {CXGlyph}
+      <div className={`flex flex-col justify-center ${config.textGap}`}>
         <span 
-          className={`text-[#D4FF00] ${dimensions述.titleSize} leading-none`}
-          style={{ 
-            fontFamily: "'Space Grotesk', system-ui, -apple-system, sans-serif",
-            letterSpacing: '0.01em'
-          }}
+          className={`text-white ${config.titleSize} uppercase leading-none font-sans`}
+          style={{ fontFamily: "'Space Grotesk', system-ui, -apple-system, sans-serif" }}
         >
-          Chathurya
+          CHATHURYA
         </span>
         {showTagline && (
           <span 
-            className={`text-[#C2C9C2] ${dimensions述.taglineSize} leading-none mt-1`}
-            style={{ 
-              fontFamily: "'JetBrains Mono', monospace",
-              letterSpacing: '0.04em'
-            }}
+            className={`text-zinc-400 ${config.taglineSize} uppercase leading-none font-sans`}
+            style={{ fontFamily: "'Space Grotesk', system-ui, -apple-system, sans-serif" }}
           >
-            &lt;STUDENT DEVELOPERS CLUB&gt;
+            STUDENT DEVELOPERS CLUB
           </span>
         )}
       </div>
     </div>
   );
 };
-
-

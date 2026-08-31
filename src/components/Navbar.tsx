@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  CheckCircle2, 
-  ShieldCheck, 
   User, 
   LogOut, 
-  Sparkles, 
-  Layers, 
-  Search,
-  ExternalLink 
+  Search
 } from 'lucide-react';
-import { getLocalStudentId, getStudent, clearLocalStudentId, isAdminAuthenticated, logoutAdmin } from '../lib/firebase';
+import { getLocalStudentId, getStudent, clearLocalStudentId } from '../lib/firebase';
 import { Student } from '../types';
 import { ChathuryaLogo } from './ChathuryaLogo';
 
@@ -22,7 +17,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLookup }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     // Check local student
@@ -34,19 +28,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLookup }) => {
     } else {
       setCurrentStudent(null);
     }
-
-    setIsAdmin(isAdminAuthenticated());
   }, [location.pathname]);
 
   const handleStudentLogout = () => {
     clearLocalStudentId();
     setCurrentStudent(null);
-    navigate('/');
-  };
-
-  const handleAdminLogout = async () => {
-    await logoutAdmin();
-    setIsAdmin(false);
     navigate('/');
   };
 
@@ -110,39 +96,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLookup }) => {
                 <span className="hidden sm:inline">Student Tracker</span>
                 <span className="sm:hidden">Tracker</span>
               </button>
-            )}
-
-            {/* Admin Portal Link */}
-            {isAdmin ? (
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <Link
-                  to="/admin"
-                  className="flex items-center gap-1.5 text-xs font-mono bg-[#B0FF00] text-black px-2.5 sm:px-3 py-1.5 rounded font-semibold hover:bg-[#39FF14] glow-accent transition-all"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Admin Panel</span>
-                  <span className="sm:hidden">Admin</span>
-                </Link>
-                <button
-                  onClick={handleAdminLogout}
-                  title="Exit Admin"
-                  className="text-gray-400 hover:text-red-400 p-1.5 rounded bg-zinc-900 border border-zinc-800 cursor-pointer"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ) : (
-              <Link
-                to="/admin/login"
-                className={`flex items-center gap-1.5 text-xs font-mono px-2.5 sm:px-3 py-1.5 rounded border transition-all ${
-                  location.pathname === '/admin/login'
-                    ? 'border-[#B0FF00] text-[#B0FF00] bg-[#B0FF00]/10 font-bold'
-                    : 'border-zinc-800 text-gray-400 hover:text-[#B0FF00] hover:border-[#B0FF00]/40 bg-zinc-950'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Admin</span>
-              </Link>
             )}
 
           </div>

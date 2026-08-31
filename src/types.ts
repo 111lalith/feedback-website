@@ -78,6 +78,44 @@ export interface DeletedHistoryItem {
   reviewsData?: Review[];
 }
 
+export interface DayAccessConfig {
+  day: number; // 1 to 18
+  isOpen: boolean; // whether remarks / feedback is open for this day
+  openedAt?: number;
+  topicFocus?: string;
+  remarksAllowed?: boolean;
+  notes?: string;
+}
+
+export interface FeedbackSettings {
+  id: string; // 'feedback_config'
+  unlockedDays: number[]; // Array of currently unlocked day numbers, e.g. [1, 2]
+  dayConfigs: Record<number, DayAccessConfig>;
+  globalOpen?: boolean;
+  updatedAt: number;
+  updatedBy?: string;
+}
+
+export interface DailyRemark {
+  id: string;
+  studentId: string;
+  day: number;
+  studentName: string;
+  studentRollNo: string;
+  idCardNo: string;
+  studentEmail?: string;
+  studentCourse?: string;
+  studentYear?: string;
+  studentSection?: string;
+  studentStream: StreamType;
+  rating: number; // 1 to 5 stars
+  remarks: string; // detailed daily remarks & feedback
+  keyLearnings?: string; // what student learned today
+  doubts?: string; // queries / difficulty faced
+  recommend: boolean;
+  submittedAt: number;
+}
+
 export interface DayTopic {
   day: number;
   fullStackTopic: string;

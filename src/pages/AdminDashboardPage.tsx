@@ -28,7 +28,10 @@ import {
   Trash2,
   History,
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  Sliders,
+  Unlock,
+  Lock
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -69,6 +72,7 @@ import {
 } from '../types';
 import { ChathuryaLogo } from '../components/ChathuryaLogo';
 import { HistoryArchiveView } from '../components/HistoryArchiveView';
+import { AdminDayAccessManager } from '../components/AdminDayAccessManager';
 
 export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -79,8 +83,8 @@ export const AdminDashboardPage: React.FC = () => {
   const [seeding, setSeeding] = useState<boolean>(false);
   const [seedNotice, setSeedNotice] = useState<string | null>(null);
 
-  // Active Tab: 'analytics' | 'students' | 'day_feedback' | 'data_tools' | 'history'
-  const [activeTab, setActiveTab] = useState<'analytics' | 'students' | 'day_feedback' | 'data_tools' | 'history'>('analytics');
+  // Active Tab: 'day_access' | 'analytics' | 'students' | 'day_feedback' | 'data_tools' | 'history'
+  const [activeTab, setActiveTab] = useState<'day_access' | 'analytics' | 'students' | 'day_feedback' | 'data_tools' | 'history'>('day_access');
 
   // Deletion & Safety States
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
@@ -561,6 +565,18 @@ export const AdminDashboardPage: React.FC = () => {
         {/* Tab Navigation Controls */}
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-2 overflow-x-auto font-mono text-xs">
           <button
+            onClick={() => setActiveTab('day_access')}
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
+              activeTab === 'day_access'
+                ? 'bg-[#B0FF00] text-black font-bold glow-accent'
+                : 'text-gray-400 hover:text-white bg-zinc-950'
+            }`}
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span>Daily Access & Remarks Control</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('analytics')}
             className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === 'analytics'
@@ -620,6 +636,15 @@ export const AdminDashboardPage: React.FC = () => {
             <span>History & Archive</span>
           </button>
         </div>
+
+        {/* TAB 0: DAILY ACCESS CONTROL & REMARKS */}
+        {activeTab === 'day_access' && (
+          <AdminDayAccessManager 
+            students={students} 
+            reviews={reviews} 
+            onRefreshData={fetchData} 
+          />
+        )}
 
         {/* TAB 1: VISUAL ANALYTICS */}
         {activeTab === 'analytics' && (

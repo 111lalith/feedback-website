@@ -18,15 +18,18 @@ import {
   Award,
   ThumbsUp,
   ThumbsDown,
-  RefreshCw
+  RefreshCw,
+  Lock,
+  Unlock
 } from 'lucide-react';
 import { 
   getLocalStudentId, 
   getStudent, 
   getStudentReviews, 
-  clearLocalStudentId 
+  clearLocalStudentId,
+  subscribeFeedbackSettings
 } from '../lib/firebase';
-import { Student, Review, WORKSHOP_TOPICS, DayTopic } from '../types';
+import { Student, Review, WORKSHOP_TOPICS, DayTopic, FeedbackSettings } from '../types';
 
 interface StudentDashboardPageProps {
   onOpenLookup: () => void;
@@ -37,6 +40,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
   
   const [student, setStudent] = useState<Student | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [feedbackSettings, setFeedbackSettings] = useState<FeedbackSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedSubmittedReview, setSelectedSubmittedReview] = useState<{ review: Review; topic: DayTopic } | null>(null);
 
@@ -65,6 +69,10 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
 
   useEffect(() => {
     loadData();
+    const unsub = subscribeFeedbackSettings((settings) => {
+      setFeedbackSettings(settings);
+    });
+    return () => unsub();
   }, []);
 
   if (loading) {
@@ -256,6 +264,12 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                 ? topic.fullStackTopic 
                 : topic.dataAnalyticsTopic;
 
+              const isUnlockedByAdmin = Boolean(
+                feedbackSettings?.globalOpen ||
+                feedbackSettings?.unlockedDays?.includes(topic.day) ||
+                feedbackSettings?.dayConfigs?.[topic.day]?.isOpen
+              );
+
               return (
                 <div
                   key={topic.day}
@@ -269,7 +283,9 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                   className={`group relative rounded-xl p-5 border transition-all cursor-pointer select-none ${
                     isSubmitted
                       ? 'bg-[#0d0d0d] border-[#B0FF00]/60 hover:border-[#B0FF00] glow-accent-subtle hover:glow-accent'
-                      : 'bg-black border-zinc-800 hover:border-[#B0FF00]/70 hover:bg-zinc-950'
+                      : isUnlockedByAdmin
+                      ? 'bg-black border-[#B0FF00]/40 hover:border-[#B0FF00] hover:bg-zinc-950 shadow-[0_0_15px_rgba(176,255,0,0.08)]'
+                      : 'bg-black border-zinc-900 opacity-80 hover:opacity-100 hover:border-zinc-800'
                   }`}
                 >
                   
@@ -278,7 +294,9 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                     <span className={`font-mono text-xs font-bold px-2.5 py-1 rounded-md border ${
                       isSubmitted
                         ? 'bg-[#B0FF00] text-black border-[#B0FF00]'
-                        : 'bg-zinc-900 text-[#B0FF00] border-zinc-700 group-hover:border-[#B0FF00]/40'
+                        : isUnlockedByAdmin
+                        ? 'bg-black text-[#B0FF00] border-[#B0FF00]/50'
+                        : 'bg-zinc-900 text-zinc-500 border-zinc-800'
                     }`}>
                       DAY {topic.day.toString().padStart(2, '0')}
                     </span>
@@ -288,10 +306,16 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                         <CheckCircle2 className="w-4 h-4 fill-[#B0FF00] text-black" />
                         <span className="font-bold">{matchingReview?.overallRating}/5 ★</span>
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-500 group-hover:text-[#B0FF00] transition-colors">
-                        <span>Tap to Review</span>
+                    ) : isUnlockedByAdmin ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[#B0FF00]">
+                        <Unlock className="w-3 h-3" />
+                        <span>Open for Remarks</span>
                         <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-mono text-zinc-500">
+                        <Lock className="w-3 h-3" />
+                        <span>Locked by Admin</span>
                       </span>
                     )}
                   </div>
@@ -316,9 +340,14 @@ export const StudentDashboardPage: React.FC<StudentDashboardPageProps> = ({ onOp
                       <span className="text-xs text-[#B0FF00] flex items-center gap-1">
                         <Eye className="w-3 h-3" /> View Summary
                       </span>
+                    ) : isUnlockedByAdmin ? (
+                      <span className="text-xs text-[#B0FF00] font-semibold flex items-center gap-1">
+                        <span>Enter Today's Feedback</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </span>
                     ) : (
-                      <span className="text-zinc-400 group-hover:text-white transition-colors">
-                        Pending Submission
+                      <span className="text-zinc-500 flex items-center gap-1">
+                        <Lock className="w-2.5 h-2.5" /> Awaiting Unlock
                       </span>
                     )}
                   </div>

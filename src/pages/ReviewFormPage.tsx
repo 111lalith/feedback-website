@@ -22,9 +22,11 @@ import {
   getLocalStudentId, 
   getStudent, 
   getStudentReviews, 
-  submitReview 
+  submitDailyRemark,
+  getFeedbackSettings,
+  subscribeFeedbackSettings
 } from '../lib/firebase';
-import { Student, Review, WORKSHOP_TOPICS, DayTopic } from '../types';
+import { Student, Review, WORKSHOP_TOPICS, DayTopic, FeedbackSettings } from '../types';
 
 interface ReviewFormPageProps {
   onOpenLookup: () => void;
@@ -37,7 +39,9 @@ export const ReviewFormPage: React.FC<ReviewFormPageProps> = ({ onOpenLookup }) 
 
   const [student, setStudent] = useState<Student | null>(null);
   const [existingReview, setExistingReview] = useState<Review | null>(null);
+  const [feedbackSettings, setFeedbackSettings] = useState<FeedbackSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [checkingAccess, setCheckingAccess] = useState<boolean>(false);
 
   // Form State
   const [overallRating, setOverallRating] = useState<number>(5);
@@ -61,10 +65,15 @@ export const ReviewFormPage: React.FC<ReviewFormPageProps> = ({ onOpenLookup }) 
   };
 
   useEffect(() => {
+    // Listen for real-time day access unlock by admin
+    const unsub = subscribeFeedbackSettings((settings) => {
+      setFeedbackSettings(settings);
+    });
+
     const studentId = getLocalStudentId();
     if (!studentId) {
       setLoading(false);
-      return;
+      return () => unsub();
     }
 
     const init = async () => {
@@ -86,7 +95,26 @@ export const ReviewFormPage: React.FC<ReviewFormPageProps> = ({ onOpenLookup }) 
     };
 
     init();
+    return () => unsub();
   }, [dayNumber]);
+
+  const handleManualCheckAccess = async () => {
+    setCheckingAccess(true);
+    try {
+      const freshSettings = await getFeedbackSettings();
+      setFeedbackSettings(freshSettings);
+    } catch (e) {
+      console.warn('Manual check access failed:', e);
+    } finally {
+      setCheckingAccess(false);
+    }
+  };
+
+  const isDayUnlocked = Boolean(
+    feedbackSettings?.globalOpen ||
+    feedbackSettings?.unlockedDays?.includes(dayNumber) ||
+    feedbackSettings?.dayConfigs?.[dayNumber]?.isOpen
+  );
 
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
@@ -94,13 +122,9 @@ export const ReviewFormPage: React.FC<ReviewFormPageProps> = ({ onOpenLookup }) 
     if (!overallRating) errs.overall = 'Please select overall day satisfaction rating';
 
     if (!liked.trim()) {
-      errs.liked = 'Please write at least a brief comment on what you liked';
+      errs.liked = 'Please write your remarks or key takeaways from today\'s session';
     } else if (liked.trim().length < 3) {
       errs.liked = 'Please provide a little more detail';
-    }
-
-    if (!improve.trim()) {
-      errs.improve = 'Please note what could be improved or type "None"';
     }
 
     setErrors(errs);
@@ -116,16 +140,22 @@ export const ReviewFormPage: React.FC<ReviewFormPageProps> = ({ onOpenLookup }) 
     setServerError(null);
 
     try {
-      await submitReview({
+      await submitDailyRemark({
         studentId: student.id,
         day: dayNumber,
-        overallRating,
-        liked: liked.trim(),
-        improve: improve.trim(),
+        rating: overallRating,
+        remarks: liked.trim(),
+        keyLearnings: liked.trim(),
+        doubts: improve.trim() || 'None',
         recommend,
         studentName: student.name,
-        studentStream: student.stream,
-        idCardNo: student.idCardNo
+        studentRollNo: student.idCardNo,
+        idCardNo: student.idCardNo,
+        studentEmail: student.email,
+        studentCourse: student.course || 'BCA',
+        studentYear: student.year || 'Year 1',
+        studentSection: student.section || 'A',
+        studentStream: student.stream
       });
 
       // Joyful celebration confetti
@@ -198,6 +228,84 @@ export const ReviewFormPage: React.FC<ReviewFormPageProps> = ({ onOpenLookup }) 
   const topicTitle = student.stream === 'Full Stack Development' 
     ? currentTopic.fullStackTopic 
     : currentTopic.dataAnalyticsTopic;
+
+  // Day is locked by administrator
+  if (!isDayUnlocked && !existingReview) {
+    return (
+      <div className="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-xl mx-auto space-y-6">
+          
+          <div className="flex items-center justify-between font-mono text-xs text-gray-400">
+            <Link to="/dashboard" className="hover:text-[#B0FF00] flex items-center gap-1 transition-colors">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to 18-Day Tracker
+            </Link>
+            <span className="text-zinc-500">Day {dayNumber} Feedback Portal</span>
+          </div>
+
+          <div className="bg-[#0d0d0d] border border-red-500/40 rounded-2xl p-6 sm:p-8 space-y-6 text-center">
+            
+            <div className="w-16 h-16 rounded-2xl bg-black border border-red-500/50 mx-auto flex items-center justify-center text-red-400">
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-red-950/60 border border-red-800/40 text-[11px] font-mono text-red-300">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+                ADMIN ACCESS LOCKED
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white font-sans">
+                Day {dayNumber} Remarks & Feedback Closed
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-400 font-sans max-w-md mx-auto leading-relaxed">
+                The workshop administrator (<span className="text-zinc-300 font-mono">Chathuryastdclub@gmail.com</span>) has not unlocked student submissions for <strong className="text-white">Day {dayNumber}: {topicTitle}</strong> yet.
+              </p>
+            </div>
+
+            <div className="p-4 bg-black rounded-xl border border-zinc-800 text-left space-y-2 font-mono text-xs">
+              <div className="flex justify-between text-zinc-400">
+                <span>Student:</span>
+                <span className="text-white">{student.name} ({student.idCardNo})</span>
+              </div>
+              <div className="flex justify-between text-zinc-400">
+                <span>Track:</span>
+                <span className="text-[#B0FF00]">{student.stream}</span>
+              </div>
+              <div className="flex justify-between text-zinc-400">
+                <span>Access Status:</span>
+                <span className="text-red-400 font-bold">Waiting for instructor toggle</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleManualCheckAccess}
+                disabled={checkingAccess}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-black border border-[#B0FF00] text-[#B0FF00] hover:bg-[#B0FF00] hover:text-black font-mono text-xs font-bold transition-all glow-accent flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Terminal className={`w-3.5 h-3.5 ${checkingAccess ? 'animate-spin' : ''}`} />
+                <span>{checkingAccess ? 'Checking Access...' : 'Check Live Access Status'}</span>
+              </button>
+
+              <Link
+                to="/dashboard"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-gray-300 border border-zinc-800 font-mono text-xs transition-colors flex items-center justify-center gap-1.5"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Grid</span>
+              </Link>
+            </div>
+
+            <p className="text-[11px] font-mono text-zinc-500">
+              ⚡ This screen is connected via real-time Firestore listener. Once your instructor grants access, the feedback form will unlock automatically.
+            </p>
+
+          </div>
+
+        </div>
+      </div>
+    );
+  }
 
   // Already submitted state
   if (existingReview) {
