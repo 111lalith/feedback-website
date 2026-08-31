@@ -54,10 +54,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLookup }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
           {/* Top Badge with Logo */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0d0d0d] border border-[#B0FF00]/40 text-xs font-mono text-[#B0FF00] glow-accent-subtle w-fit">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+            <ChathuryaLogo size="sm" layout="badge" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#0d0d0d] border border-[#B0FF00]/40 text-xs font-mono text-[#B0FF00] glow-accent-subtle w-fit">
               <span className="w-2 h-2 rounded-full bg-[#B0FF00] animate-ping shrink-0" />
-              <span>CHATHURYA STUDENT DEVELOPERS CLUB • 18-DAY FLAGSHIP WORKSHOP</span>
+              <span>18-DAY FLAGSHIP TECHNICAL WORKSHOP</span>
             </div>
           </div>
 
