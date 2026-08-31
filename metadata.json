@@ -1,0 +1,6 @@
+{
+  "name": "Chathurya Workshop Review Portal",
+  "description": "Daily 18-day workshop feedback and review tracker for Chathurya Student Developer Club (Full Stack & Data Analytics).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
