@@ -12,7 +12,8 @@ import {
   orderBy, 
   serverTimestamp,
   deleteDoc,
-  onSnapshot
+  onSnapshot,
+  setLogLevel
 } from 'firebase/firestore';
 import { 
   getAuth, 
@@ -33,6 +34,11 @@ const firebaseConfig = {
   messagingSenderId: firebaseConfigJson.messagingSenderId,
   appId: firebaseConfigJson.appId,
 };
+
+// Set log level to error to prevent noisy non-fatal offline reconnection logs
+try {
+  setLogLevel('error');
+} catch (e) {}
 
 // Initialize Firebase
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);

@@ -9,7 +9,8 @@ import {
   Mail,
   UserCheck,
   Building2,
-  Sparkles
+  Users,
+  ExternalLink
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChathuryaLogo } from './ChathuryaLogo';
@@ -28,6 +29,8 @@ export const Footer: React.FC = () => {
     setIsAdmin(false);
     navigate('/');
   };
+
+  const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Seshadripuram+College,+24+Nagappa+Street,+Seshadripuram,+Bengaluru,+Karnataka+560020";
 
   return (
     <footer className="border-t border-[#B0FF00]/20 bg-black pt-12 pb-8 mt-auto">
@@ -65,28 +68,62 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Col 2: Contact & Institutional Info from Official Banner (4 cols) */}
+          {/* Col 2: Contact, Leadership & Clickable Map Address (4 cols) */}
           <div className="md:col-span-4 space-y-3.5 font-sans text-xs">
             <p className="text-white font-bold uppercase tracking-wider text-xs font-mono border-b border-zinc-800 pb-2">
               Contact & Club Info
             </p>
 
             <div className="space-y-2.5 text-gray-300">
-              <div className="flex items-start gap-2 text-zinc-300">
-                <MapPin className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <span className="leading-snug">
-                  Seshadripuram College, 24, Nagappa Road, Bengaluru North, Karnataka
-                </span>
-              </div>
+              {/* Clickable College Location with Map Redirection */}
+              <a
+                href={googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Click to view Seshadripuram College location on Google Maps"
+                className="group flex items-start gap-2 p-2 -mx-2 rounded-lg hover:bg-zinc-900/80 border border-transparent hover:border-zinc-800 transition-all cursor-pointer"
+              >
+                <MapPin className="w-4 h-4 text-[#B0FF00] shrink-0 mt-0.5 group-hover:animate-bounce" />
+                <div className="flex-1">
+                  <span className="text-zinc-200 group-hover:text-[#B0FF00] font-medium leading-snug transition-colors flex items-center gap-1">
+                    Seshadripuram College, 24, Nagappa Road, Bengaluru North, Karnataka
+                    <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 shrink-0" />
+                  </span>
+                  <span className="text-[10px] text-zinc-500 group-hover:text-zinc-400 font-mono block mt-0.5">
+                    Click to open in Google Maps ↗
+                  </span>
+                </div>
+              </a>
 
-              <div className="flex items-center gap-2 text-zinc-300 pt-1">
+              {/* Faculty Convener */}
+              <div className="flex items-center gap-2 text-zinc-300 pt-0.5">
                 <UserCheck className="w-4 h-4 text-[#B0FF00] shrink-0" />
                 <span>
-                  <strong className="text-zinc-400 font-normal">Faculty Convener:</strong> <span className="text-white font-semibold">Mr. Shivaswamy D S</span>
+                  <strong className="text-zinc-400 font-normal">Faculty Convener:</strong>{' '}
+                  <span className="text-white font-semibold">Mr. Shivaswamy D S</span>
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-zinc-300">
+              {/* Student Coordinators & Vice-Coordinator */}
+              <div className="bg-zinc-950 border border-zinc-800/80 rounded-lg p-2.5 space-y-1.5 font-mono text-[11px]">
+                <div className="flex items-center gap-1.5 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
+                  <Users className="w-3.5 h-3.5 text-[#B0FF00]" />
+                  <span>Student Leadership</span>
+                </div>
+                <div className="grid grid-cols-1 gap-1 text-zinc-300 pl-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Coordinator:</span>
+                    <span className="text-[#B0FF00] font-bold">Harishwar</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Vice-Coordinator:</span>
+                    <span className="text-[#B0FF00] font-bold">Harshitha</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="flex items-center gap-2 text-zinc-300 pt-0.5">
                 <Mail className="w-4 h-4 text-yellow-400 shrink-0" />
                 <a 
                   href="mailto:chathuryasdc@gmail.com" 
