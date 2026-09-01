@@ -206,7 +206,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLookup }) => {
                 One-Time Registration
               </h4>
               <p className="text-sm text-gray-400 font-sans leading-relaxed">
-                Provide your Full Name, 10-digit Phone, College ID Card Number, Stream (Full Stack or DA), Class Section, and Laptop availability.
+                Provide your Full Name, 10-digit Phone, College ID Card Number, Stream (Full Stack or DA), and Class Section.
               </p>
             </div>
 

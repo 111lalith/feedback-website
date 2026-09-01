@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  ShieldCheck, 
   Terminal, 
   Lock, 
   Mail, 
   AlertCircle, 
   ArrowRight, 
+  Eye,
+  EyeOff,
   Sparkles,
-  KeyRound,
-  CheckCircle2
+  KeyRound
 } from 'lucide-react';
 import { loginAdmin } from '../lib/firebase';
 import { ChathuryaLogo } from '../components/ChathuryaLogo';
@@ -18,12 +18,16 @@ export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) {
+    const cleanEmail = email.trim();
+    const cleanPass = password.trim();
+
+    if (!cleanEmail || !cleanPass) {
       setError('Please provide both administrator email and password.');
       return;
     }
@@ -31,13 +35,19 @@ export const AdminLoginPage: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const result = await loginAdmin(email, password);
+    const result = await loginAdmin(cleanEmail, cleanPass);
     if (result.success) {
       navigate('/admin');
     } else {
       setError(result.error || 'Invalid administrator credentials.');
       setLoading(false);
     }
+  };
+
+  const handleQuickFill = () => {
+    setEmail('chathuryastdclub@gmail.com');
+    setPassword('Studentdev');
+    setError(null);
   };
 
   return (
@@ -87,23 +97,53 @@ export const AdminLoginPage: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter admin email address"
+                placeholder="chathuryastdclub@gmail.com"
                 className="w-full bg-black border border-zinc-700 focus:border-[#B0FF00] focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-[#B0FF00]" /> Secret Password
+              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-[#B0FF00]" /> Secret Password
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[11px] text-zinc-400 hover:text-[#B0FF00] flex items-center gap-1 cursor-pointer transition-colors"
+                >
+                  {showPassword ? (
+                    <>
+                      <EyeOff className="w-3 h-3" /> Hide
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3 h-3" /> Show
+                    </>
+                  )}
+                </button>
               </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
-                className="w-full bg-black border border-zinc-700 focus:border-[#B0FF00] focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-mono"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter admin password"
+                  className="w-full bg-black border border-zinc-700 focus:border-[#B0FF00] focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-mono pr-10"
+                />
+              </div>
+            </div>
+
+            {/* Quick Fill Demo Helper */}
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={handleQuickFill}
+                className="text-[11px] font-mono text-[#B0FF00]/80 hover:text-[#B0FF00] flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <KeyRound className="w-3 h-3" /> Auto-Fill Admin Credentials
+              </button>
             </div>
 
             <div className="pt-2">

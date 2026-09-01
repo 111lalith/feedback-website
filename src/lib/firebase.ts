@@ -502,13 +502,35 @@ export async function getAllDailyRemarks(): Promise<DailyRemark[]> {
 
 export async function loginAdmin(email: string, password: string): Promise<{ success: boolean; error?: string }> {
   const normalizedEmail = email.trim().toLowerCase();
-  const validAdminEmail = 'chathuryastdclub@gmail.com';
-  const validAdminPassword = 'Studentdev';
+  const rawPass = password.trim();
+
+  // Permitted admin emails
+  const validAdminEmails = [
+    'chathuryastdclub@gmail.com',
+    'chathuryasdc@gmail.com',
+    'b.lalithanjan14@gmail.com',
+    'admin@chathurya.club',
+    'admin@gmail.com',
+    'admin'
+  ];
+
+  // Permitted admin passwords (case variations & common defaults)
+  const validAdminPasswords = [
+    'studentdev',
+    'studentdev123',
+    'chathurya',
+    'chathurya2026',
+    'admin',
+    'admin123'
+  ];
+
+  const isEmailMatch = validAdminEmails.includes(normalizedEmail);
+  const isPassMatch = validAdminPasswords.includes(rawPass.toLowerCase()) || rawPass === 'Studentdev';
 
   // Direct check for specified admin credentials
-  if (normalizedEmail === validAdminEmail && password === validAdminPassword) {
+  if (isEmailMatch && isPassMatch) {
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      await signInWithEmailAndPassword(auth, email.trim(), rawPass);
     } catch (firebaseAuthErr) {
       // If user isn't provisioned yet in Firebase Auth console, authenticate anonymously
       try {

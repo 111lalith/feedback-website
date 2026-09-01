@@ -1,11 +1,11 @@
 export type StreamType = 'Full Stack Development' | 'Data Analytics';
 
-export type CourseType = 'BCA' | 'BBA' | 'BCOM' | 'BCOM (A & F)';
+export type CourseType = 'BCA' | 'BBA' | 'BCOM' | 'BCOM (A & F)' | 'BCOM LSCM';
 export type YearType = 'Year 1' | 'Year 2' | 'Year 3';
 export type SectionType = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K';
 export type LaptopStatusType = 'I have laptop' | "I don't have laptop" | 'I have at home';
 
-export const COURSES: CourseType[] = ['BCA', 'BBA', 'BCOM', 'BCOM (A & F)'];
+export const COURSES: CourseType[] = ['BCA', 'BBA', 'BCOM', 'BCOM (A & F)', 'BCOM LSCM'];
 export const YEARS: YearType[] = ['Year 1', 'Year 2', 'Year 3'];
 export const SECTIONS: SectionType[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
 export const LAPTOP_OPTIONS: { id: LaptopStatusType; label: string; sublabel: string }[] = [

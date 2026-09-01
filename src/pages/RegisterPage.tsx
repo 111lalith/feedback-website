@@ -9,7 +9,6 @@ import {
   GraduationCap, 
   Code2, 
   Database, 
-  Laptop, 
   CheckCircle2, 
   AlertCircle, 
   ArrowRight, 
@@ -24,11 +23,9 @@ import {
   CourseType, 
   YearType, 
   SectionType, 
-  LaptopStatusType,
   COURSES,
   YEARS,
-  SECTIONS,
-  LAPTOP_OPTIONS
+  SECTIONS
 } from '../types';
 import { ChathuryaLogo } from '../components/ChathuryaLogo';
 
@@ -50,7 +47,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
   const [section, setSection] = useState<SectionType>('A');
 
   const [stream, setStream] = useState<StreamType>('Full Stack Development');
-  const [laptopStatus, setLaptopStatus] = useState<LaptopStatusType>('I have laptop');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -112,8 +108,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
         section,
         classSection: formattedClassSection,
         stream,
-        laptopStatus,
-        hasLaptop: laptopStatus === 'I have laptop'
+        laptopStatus: 'I have laptop',
+        hasLaptop: true
       });
 
       // Successful registration! Redirect to 18-day dashboard
@@ -127,179 +123,150 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
   };
 
   return (
-    <div className="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-black py-8 sm:py-12 px-3 sm:px-6 lg:px-8 pb-28 sm:pb-16">
+      <div className="max-w-2xl mx-auto space-y-6">
         
-        {/* Breadcrumb / Return Link */}
-        <div className="mb-6 flex items-center justify-between font-mono text-xs text-gray-400">
+        {/* Navigation & Lookup helper */}
+        <div className="flex items-center justify-between text-xs font-mono text-gray-400">
           <Link to="/" className="hover:text-[#B0FF00] flex items-center gap-1 transition-colors">
-            ← Back to Overview
+            ← Return to Workshop Overview
           </Link>
           <button 
-            onClick={onOpenLookup} 
-            className="text-gray-400 hover:text-[#B0FF00] flex items-center gap-1 transition-colors cursor-pointer"
+            onClick={onOpenLookup}
+            className="text-[#B0FF00] hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <Search className="w-3.5 h-3.5 text-[#B0FF00]" />
-            <span>Open Student Tracker</span>
+            <Search className="w-3.5 h-3.5" /> Already registered? Find ID
           </button>
         </div>
 
-        {/* Main Registration Card */}
-        <div className="bg-[#0d0d0d] border border-[#B0FF00]/40 rounded-2xl p-5 sm:p-8 glow-accent shadow-2xl relative">
+        {/* Main Card */}
+        <div className="bg-[#0d0d0d] border border-[#B0FF00]/40 rounded-2xl p-4 sm:p-8 glow-accent shadow-2xl relative">
           
           {/* Header */}
-          <div className="border-b border-zinc-800 pb-5 mb-6">
-            <ChathuryaLogo size="sm" className="mb-3" />
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-sans tracking-tight">
-              Workshop Registration
+          <div className="text-center space-y-3 mb-6 sm:mb-8">
+            <div className="flex justify-center">
+              <ChathuryaLogo size="md" className="mb-2" />
+            </div>
+            
+            <h1 className="text-xl sm:text-3xl font-extrabold text-white font-sans tracking-tight">
+              18-Day Workshop Registration
             </h1>
-            <p className="text-xs sm:text-sm text-gray-400 font-sans mt-1">
-              One-time registration for the 18-Day Flagship Workshop.
+            
+            <p className="text-xs sm:text-sm text-gray-400 font-sans max-w-md mx-auto leading-relaxed">
+              Enter your student details to generate your verified profile for daily session reviews and code feedback.
             </p>
           </div>
 
+          {/* Server Error Alert */}
           {serverError && (
             <div className="mb-6 flex items-start gap-3 bg-red-950/40 border border-red-500/50 rounded-xl p-4 text-xs text-red-200">
               <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold font-mono">Registration Warning</p>
-                <p>{serverError}</p>
-              </div>
+              <span>{serverError}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
             
-            {/* Full Name */}
+            {/* Student Full Name */}
             <div>
-              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#B0FF00]" /> Full Name
-                  <span className="text-[#B0FF00]">*</span>
-                </span>
-                {errors.name && (
-                  <span className="text-red-400 text-[11px] lowercase">{errors.name}</span>
-                )}
+              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-[#B0FF00]" /> Full Name
+                <span className="text-[#B0FF00]">*</span>
               </label>
               <input
                 type="text"
                 value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
-                }}
-                placeholder="e.g. Aarav Sharma"
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Rahul Sharma"
                 className={`w-full bg-black border ${
-                  errors.name ? 'border-red-500' : 'border-zinc-700'
-                } focus:border-[#B0FF00] focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-sans`}
+                  errors.name ? 'border-red-500' : 'border-zinc-700 focus:border-[#B0FF00]'
+                } focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-sans`}
               />
+              {errors.name && <p className="text-red-400 text-xs font-mono mt-1">{errors.name}</p>}
             </div>
 
-            {/* Phone & ID Card (2-Col) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              {/* Phone */}
-              <div>
-                <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-[#B0FF00]" /> Phone Number (10 digits)
-                    <span className="text-[#B0FF00]">*</span>
-                  </span>
-                </label>
+            {/* 10-Digit Phone Number */}
+            <div>
+              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-[#B0FF00]" /> Mobile Number (10 Digits)
+                <span className="text-[#B0FF00]">*</span>
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500 font-mono text-sm">
+                  +91
+                </div>
                 <input
                   type="tel"
                   maxLength={10}
                   value={phone}
-                  onChange={(e) => {
-                    setPhone(e.target.value.replace(/[^0-9]/g, ''));
-                    if (errors.phone) setErrors(prev => ({ ...prev, phone: '' }));
-                  }}
+                  onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
                   placeholder="9876543210"
                   className={`w-full bg-black border ${
-                    errors.phone ? 'border-red-500' : 'border-zinc-700'
-                  } focus:border-[#B0FF00] focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-mono`}
+                    errors.phone ? 'border-red-500' : 'border-zinc-700 focus:border-[#B0FF00]'
+                  } focus:ring-1 focus:ring-[#B0FF00] rounded-xl pl-12 pr-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-mono`}
                 />
-                {errors.phone && (
-                  <span className="text-red-400 text-[11px] font-mono mt-1 block">{errors.phone}</span>
-                )}
               </div>
-
-              {/* ID Card Number */}
-              <div>
-                <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-[#B0FF00]" /> College ID Card No
-                    <span className="text-[#B0FF00]">*</span>
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={idCardNo}
-                  onChange={(e) => {
-                    setIdCardNo(e.target.value);
-                    if (errors.idCardNo) setErrors(prev => ({ ...prev, idCardNo: '' }));
-                  }}
-                  placeholder="e.g. 21BCA042"
-                  className={`w-full bg-black border ${
-                    errors.idCardNo ? 'border-red-500' : 'border-zinc-700'
-                  } focus:border-[#B0FF00] focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-mono uppercase tracking-wider`}
-                />
-                {errors.idCardNo && (
-                  <span className="text-red-400 text-[11px] font-mono mt-1 block">{errors.idCardNo}</span>
-                )}
-              </div>
-
+              {errors.phone && <p className="text-red-400 text-xs font-mono mt-1">{errors.phone}</p>}
             </div>
 
-            {/* Email */}
+            {/* College ID Card Number */}
             <div>
-              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-[#B0FF00]" /> Email Address
-                  <span className="text-[#B0FF00]">*</span>
-                </span>
-                {errors.email && (
-                  <span className="text-red-400 text-[11px] lowercase">{errors.email}</span>
-                )}
+              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-[#B0FF00]" /> College ID Card Number
+                <span className="text-[#B0FF00]">*</span>
+              </label>
+              <input
+                type="text"
+                value={idCardNo}
+                onChange={(e) => setIdCardNo(e.target.value.toUpperCase())}
+                placeholder="e.g. 21BCA042"
+                className={`w-full bg-black border ${
+                  errors.idCardNo ? 'border-red-500' : 'border-zinc-700 focus:border-[#B0FF00]'
+                } focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-mono uppercase`}
+              />
+              {errors.idCardNo && <p className="text-red-400 text-xs font-mono mt-1">{errors.idCardNo}</p>}
+            </div>
+
+            {/* Email Address */}
+            <div>
+              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-[#B0FF00]" /> Email Address
+                <span className="text-[#B0FF00]">*</span>
               </label>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (errors.email) setErrors(prev => ({ ...prev, email: '' }));
-                }}
-                placeholder="student.name@college.edu"
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="student@example.com"
                 className={`w-full bg-black border ${
-                  errors.email ? 'border-red-500' : 'border-zinc-700'
-                } focus:border-[#B0FF00] focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-sans`}
+                  errors.email ? 'border-red-500' : 'border-zinc-700 focus:border-[#B0FF00]'
+                } focus:ring-1 focus:ring-[#B0FF00] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition-all font-sans`}
               />
+              {errors.email && <p className="text-red-400 text-xs font-mono mt-1">{errors.email}</p>}
             </div>
 
-            {/* Academic Classification: Course, Year, and Section */}
-            <div className="p-4 bg-black rounded-xl border border-zinc-800 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-2">
-                <span className="text-xs font-mono text-[#B0FF00] uppercase tracking-wider font-bold flex items-center gap-1.5">
-                  <GraduationCap className="w-4 h-4" /> Academic Course & Section Details
-                </span>
-                <span className="text-[11px] font-mono text-zinc-400">
-                  Preview: <span className="text-white font-bold">{course} • {year} • Sec {section}</span>
-                </span>
-              </div>
+            {/* Academic Structure (Course, Year, Section) */}
+            <div className="bg-black/60 border border-zinc-800 rounded-xl p-4 space-y-3">
+              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                <GraduationCap className="w-3.5 h-3.5 text-[#B0FF00]" /> Academic Class Details
+                <span className="text-[#B0FF00]">*</span>
+              </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                
                 {/* Course Selection */}
                 <div>
-                  <label className="block text-[11px] font-mono text-gray-300 uppercase mb-1">
-                    Course <span className="text-[#B0FF00]">*</span>
+                  <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                    Degree / Course
                   </label>
                   <select
                     value={course}
                     onChange={(e) => setCourse(e.target.value as CourseType)}
-                    className="w-full bg-zinc-950 border border-zinc-700 focus:border-[#B0FF00] rounded-lg px-3 py-2.5 text-xs sm:text-sm text-white outline-none cursor-pointer"
+                    className="w-full bg-[#0d0d0d] border border-zinc-700 focus:border-[#B0FF00] rounded-lg px-3 py-2.5 text-xs text-white outline-none font-mono"
                   >
                     {COURSES.map((c) => (
-                      <option key={c} value={c} className="bg-zinc-900 text-white">
+                      <option key={c} value={c} className="bg-black text-white">
                         {c}
                       </option>
                     ))}
@@ -308,16 +275,16 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
 
                 {/* Year Selection */}
                 <div>
-                  <label className="block text-[11px] font-mono text-gray-300 uppercase mb-1">
-                    Year <span className="text-[#B0FF00]">*</span>
+                  <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                    Academic Year
                   </label>
                   <select
                     value={year}
                     onChange={(e) => setYear(e.target.value as YearType)}
-                    className="w-full bg-zinc-950 border border-zinc-700 focus:border-[#B0FF00] rounded-lg px-3 py-2.5 text-xs sm:text-sm text-white outline-none cursor-pointer"
+                    className="w-full bg-[#0d0d0d] border border-zinc-700 focus:border-[#B0FF00] rounded-lg px-3 py-2.5 text-xs text-white outline-none font-mono"
                   >
                     {YEARS.map((y) => (
-                      <option key={y} value={y} className="bg-zinc-900 text-white">
+                      <option key={y} value={y} className="bg-black text-white">
                         {y}
                       </option>
                     ))}
@@ -326,31 +293,39 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
 
                 {/* Section Selection */}
                 <div>
-                  <label className="block text-[11px] font-mono text-gray-300 uppercase mb-1">
-                    Section <span className="text-[#B0FF00]">*</span>
+                  <label className="block text-[11px] font-mono text-zinc-400 mb-1">
+                    Class Section
                   </label>
                   <select
                     value={section}
                     onChange={(e) => setSection(e.target.value as SectionType)}
-                    className="w-full bg-zinc-950 border border-zinc-700 focus:border-[#B0FF00] rounded-lg px-3 py-2.5 text-xs sm:text-sm text-white outline-none cursor-pointer"
+                    className="w-full bg-[#0d0d0d] border border-zinc-700 focus:border-[#B0FF00] rounded-lg px-3 py-2.5 text-xs text-white outline-none font-mono"
                   >
-                    {SECTIONS.map((sec) => (
-                      <option key={sec} value={sec} className="bg-zinc-900 text-white">
-                        Section {sec}
+                    {SECTIONS.map((s) => (
+                      <option key={s} value={s} className="bg-black text-white">
+                        Section {s}
                       </option>
                     ))}
                   </select>
                 </div>
+
+              </div>
+
+              <div className="pt-1 text-[11px] font-mono text-zinc-400 flex items-center justify-between border-t border-zinc-900">
+                <span>Selected Cohort:</span>
+                <span className="text-[#B0FF00] font-bold">
+                  {course} — {year} (Section {section})
+                </span>
               </div>
             </div>
 
             {/* Workshop Stream Selection */}
             <div>
               <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Code2 className="w-3.5 h-3.5 text-[#B0FF00]" /> Enrolled Workshop Stream
+                <Code2 className="w-3.5 h-3.5 text-[#B0FF00]" /> Choose Workshop Learning Track
                 <span className="text-[#B0FF00]">*</span>
               </label>
-
+              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 
                 {/* Full Stack Option */}
@@ -359,7 +334,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
                   onClick={() => setStream('Full Stack Development')}
                   className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                     stream === 'Full Stack Development'
-                      ? 'bg-zinc-950 border-[#B0FF00] glow-accent'
+                      ? 'bg-zinc-950 border-[#B0FF00] shadow-[0_0_15px_rgba(176,255,0,0.25)]'
                       : 'bg-black border-zinc-800 hover:border-zinc-700 text-gray-400'
                   }`}
                 >
@@ -374,7 +349,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
                     )}
                   </div>
                   <p className="text-xs text-gray-400 font-sans">
-                    HTML5, CSS3, SQLite, Python, Flask, Git & Full Canteen Capstone Project.
+                    Modern Frontend, Backend APIs, State Architecture & Real-world Full Stack Deployment.
                   </p>
                 </button>
 
@@ -403,45 +378,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onOpenLookup }) => {
                   </p>
                 </button>
 
-              </div>
-            </div>
-
-            {/* Laptop Availability: Exactly 3 options requested */}
-            <div>
-              <label className="block text-xs font-mono text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Laptop className="w-3.5 h-3.5 text-[#B0FF00]" /> Laptop Availability
-                <span className="text-[#B0FF00]">*</span>
-              </label>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {LAPTOP_OPTIONS.map((opt) => (
-                  <label
-                    key={opt.id}
-                    className={`flex flex-col p-3 rounded-xl border cursor-pointer transition-all ${
-                      laptopStatus === opt.id
-                        ? 'bg-zinc-950 border-[#B0FF00] text-white glow-accent-subtle'
-                        : 'bg-black border-zinc-800 text-gray-400 hover:border-zinc-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <input
-                        type="radio"
-                        name="laptopStatus"
-                        checked={laptopStatus === opt.id}
-                        onChange={() => setLaptopStatus(opt.id)}
-                        className="accent-[#B0FF00]"
-                      />
-                      <span className={`font-mono text-xs font-bold ${
-                        laptopStatus === opt.id ? 'text-[#B0FF00]' : 'text-gray-300'
-                      }`}>
-                        {opt.label}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-zinc-500 font-sans pl-5">
-                      {opt.sublabel}
-                    </span>
-                  </label>
-                ))}
               </div>
             </div>
 

@@ -10,7 +10,8 @@ import {
   UserCheck,
   Building2,
   Users,
-  ExternalLink
+  ExternalLink,
+  Phone
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChathuryaLogo } from './ChathuryaLogo';
@@ -33,173 +34,115 @@ export const Footer: React.FC = () => {
   const googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=Seshadripuram+College,+24+Nagappa+Street,+Seshadripuram,+Bengaluru,+Karnataka+560020";
 
   return (
-    <footer className="border-t border-[#B0FF00]/20 bg-black pt-12 pb-8 mt-auto">
+    <footer id="contact-club-info" className="border-t border-[#B0FF00]/20 bg-black pt-10 pb-24 sm:pb-10 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-10">
+        {/* Admin Login Link at the top of footer as seen on screenshot */}
+        <div className="mb-6 pb-4 border-b border-zinc-900 flex items-center justify-between">
+          <Link
+            to={isAdmin ? "/admin" : "/admin/login"}
+            className="text-xs text-zinc-500 hover:text-[#B0FF00] font-sans transition-colors flex items-center gap-1.5"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
+            <span>Admin Login</span>
+          </Link>
           
-          {/* Col 1: Club Brand & Info (5 cols) */}
-          <div className="md:col-span-5 space-y-4">
-            <Link to="/" className="inline-block group">
-              <ChathuryaLogo size="md" />
-            </Link>
+          {isAdmin && (
+            <button
+              onClick={handleAdminLogout}
+              className="text-xs text-red-400 hover:text-red-300 font-mono transition-colors"
+            >
+              Sign Out
+            </button>
+          )}
+        </div>
+
+        {/* Contact & Club Info Section matching Screenshot 2026-09-01 113600.png */}
+        <div className="space-y-5 mb-10">
+          
+          <h2 className="text-xl sm:text-2xl font-bold text-white font-sans tracking-tight">
+            Contact & Club Info
+          </h2>
+
+          <div className="space-y-3 font-sans">
             
-            <div className="space-y-2">
-              <p className="text-xs font-mono text-[#B0FF00] font-bold tracking-wider uppercase flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Department of Computer Science</span>
-              </p>
-              <p className="text-sm text-gray-400 font-sans leading-relaxed">
-                Empowering the next generation of engineers with production-grade engineering practices, intensive daily code walkthroughs, and peer review feedback.
-              </p>
-            </div>
+            {/* Department Name */}
+            <h3 className="text-base sm:text-lg font-extrabold text-white uppercase tracking-wider">
+              DEPARTMENT OF COMPUTER SCIENCE
+            </h3>
 
-            <div className="flex flex-wrap gap-2 pt-1">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-[#B0FF00]">
-                <Code2 className="w-3 h-3" /> Full Stack Dev Track
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-cyan-400">
-                <Database className="w-3 h-3" /> Data Analytics Track
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-emerald-400">
-                18 Intensive Days
-              </span>
-            </div>
-          </div>
-
-          {/* Col 2: Contact, Leadership & Clickable Map Address (4 cols) */}
-          <div className="md:col-span-4 space-y-3.5 font-sans text-xs">
-            <p className="text-white font-bold uppercase tracking-wider text-xs font-mono border-b border-zinc-800 pb-2">
-              Contact & Club Info
+            {/* Club Name in Arial font */}
+            <p 
+              className="text-sm sm:text-base font-bold text-zinc-300"
+              style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+            >
+              Chathurya Student Developers Club
             </p>
 
-            <div className="space-y-2.5 text-gray-300">
-              {/* Clickable College Location with Map Redirection */}
+            {/* College Location with Red Pin & Map Redirection */}
+            <div className="pt-1">
               <a
                 href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Click to view Seshadripuram College location on Google Maps"
-                className="group flex items-start gap-2 p-2 -mx-2 rounded-lg hover:bg-zinc-900/80 border border-transparent hover:border-zinc-800 transition-all cursor-pointer"
+                className="inline-flex items-start gap-2 text-sm text-zinc-300 hover:text-[#B0FF00] transition-colors leading-relaxed group cursor-pointer"
               >
-                <MapPin className="w-4 h-4 text-[#B0FF00] shrink-0 mt-0.5 group-hover:animate-bounce" />
-                <div className="flex-1">
-                  <span className="text-zinc-200 group-hover:text-[#B0FF00] font-medium leading-snug transition-colors flex items-center gap-1">
-                    Seshadripuram College, 24, Nagappa Road, Bengaluru North, Karnataka
-                    <ExternalLink className="w-3 h-3 opacity-60 group-hover:opacity-100 shrink-0" />
-                  </span>
-                  <span className="text-[10px] text-zinc-500 group-hover:text-zinc-400 font-mono block mt-0.5">
-                    Click to open in Google Maps ↗
-                  </span>
-                </div>
-              </a>
-
-              {/* Faculty Convener */}
-              <div className="flex items-center gap-2 text-zinc-300 pt-0.5">
-                <UserCheck className="w-4 h-4 text-[#B0FF00] shrink-0" />
-                <span>
-                  <strong className="text-zinc-400 font-normal">Faculty Convener:</strong>{' '}
-                  <span className="text-white font-semibold">Mr. Shivaswamy D S</span>
+                <span className="text-red-500 shrink-0 select-none text-base">📍</span>
+                <span className="underline decoration-zinc-700 hover:decoration-[#B0FF00] underline-offset-4">
+                  Seshadripuram College, 24, Nagappa Road, Bengaluru North, Karnataka
                 </span>
-              </div>
-
-              {/* Student Coordinators & Vice-Coordinator */}
-              <div className="bg-zinc-950 border border-zinc-800/80 rounded-lg p-2.5 space-y-1.5 font-mono text-[11px]">
-                <div className="flex items-center gap-1.5 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
-                  <Users className="w-3.5 h-3.5 text-[#B0FF00]" />
-                  <span>Student Leadership</span>
-                </div>
-                <div className="grid grid-cols-1 gap-1 text-zinc-300 pl-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">Coordinator:</span>
-                    <span className="text-[#B0FF00] font-bold">Harishwar</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">Vice-Coordinator:</span>
-                    <span className="text-[#B0FF00] font-bold">Harshitha</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Email */}
-              <div className="flex items-center gap-2 text-zinc-300 pt-0.5">
-                <Mail className="w-4 h-4 text-yellow-400 shrink-0" />
-                <a 
-                  href="mailto:chathuryasdc@gmail.com" 
-                  className="font-mono text-[#B0FF00] hover:underline font-medium"
-                >
-                  chathuryasdc@gmail.com
-                </a>
-              </div>
+                <ExternalLink className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 shrink-0 mt-1" />
+              </a>
             </div>
 
-            <p className="text-[11px] text-zinc-500 italic pt-1 leading-relaxed">
-              Conducted as part of the official student technical and learning activities of Chathurya Student Developers Club.
-            </p>
-          </div>
+            {/* Faculty Convener */}
+            <div className="pt-2 text-sm text-zinc-300">
+              <span className="font-semibold text-zinc-400">Faculty Convener:</span>{' '}
+              <span className="text-white font-medium">Mr. Shivaswamy D S</span>
+            </div>
 
-          {/* Col 3: Portal Links & Admin Access (3 cols) */}
-          <div className="md:col-span-3 space-y-4">
-            <div className="space-y-2 font-mono text-xs">
-              <p className="text-white font-bold uppercase tracking-wider text-xs border-b border-zinc-800 pb-2">
-                Quick Routes
+            {/* Student Coordinators */}
+            <div className="pt-2 space-y-1.5 text-sm">
+              <p className="font-semibold text-zinc-400">
+                Student Coordinators:
               </p>
-              <ul className="space-y-1.5 text-gray-400">
-                <li>
-                  <Link to="/" className="hover:text-[#B0FF00] transition-colors flex items-center gap-1.5 py-0.5">
-                    <ArrowRight className="w-3 h-3 text-[#B0FF00]" /> Workshop Overview
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/register" className="hover:text-[#B0FF00] transition-colors flex items-center gap-1.5 py-0.5">
-                    <ArrowRight className="w-3 h-3 text-[#B0FF00]" /> Student Registration
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/dashboard" className="hover:text-[#B0FF00] transition-colors flex items-center gap-1.5 py-0.5">
-                    <ArrowRight className="w-3 h-3 text-[#B0FF00]" /> 18-Day Tracker Grid
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Admin Command Portal Access */}
-            <div className="bg-[#0d0d0d] border border-zinc-800/90 rounded-xl p-3.5 font-mono text-xs space-y-2">
-              <div className="flex items-center gap-1.5 text-zinc-300 font-bold uppercase text-[11px]">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#B0FF00]" />
-                <span>Instructor Portal</span>
-              </div>
               
-              {isAdmin ? (
-                <div className="flex items-center gap-2 pt-1">
-                  <Link
-                    to="/admin"
-                    className="flex-1 px-3 py-1.5 rounded-lg bg-[#B0FF00] text-black font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-[#39FF14] glow-accent transition-all"
+              <div className="space-y-1 pl-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-zinc-300">Harishwar:</span>
+                  <a 
+                    href="tel:+919632165579" 
+                    className="text-[#C6FF00] hover:text-[#39FF14] font-bold font-mono tracking-wide hover:underline"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    <span>Admin Panel</span>
-                  </Link>
-                  <button
-                    onClick={handleAdminLogout}
-                    title="Logout Admin"
-                    className="p-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-gray-400 hover:text-red-400 border border-zinc-700 transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                  </button>
+                    +91 96321 65579
+                  </a>
                 </div>
-              ) : (
-                <Link
-                  to="/admin/login"
-                  className="w-full px-3 py-1.5 rounded-lg bg-black hover:bg-[#B0FF00] text-gray-300 hover:text-black border border-zinc-700 hover:border-[#B0FF00] font-semibold text-xs transition-all flex items-center justify-center gap-1.5 group cursor-pointer"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#B0FF00] group-hover:text-black transition-colors" />
-                  <span>Admin Login</span>
-                </Link>
-              )}
+                
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-zinc-300">Harshitha:</span>
+                  <a 
+                    href="tel:+919449746460" 
+                    className="text-[#C6FF00] hover:text-[#39FF14] font-bold font-mono tracking-wide hover:underline"
+                  >
+                    +91 94497 46460
+                  </a>
+                </div>
+              </div>
             </div>
-          </div>
 
+            {/* Official Club Email */}
+            <div className="pt-2 text-sm flex flex-wrap items-center gap-1.5">
+              <span className="font-semibold text-zinc-400">Email:</span>
+              <a 
+                href="mailto:chathuryasdc@gmail.com" 
+                className="text-[#C6FF00] hover:text-[#39FF14] font-bold font-mono hover:underline"
+              >
+                chathuryasdc@gmail.com
+              </a>
+            </div>
+
+          </div>
         </div>
 
         {/* Sub-Footer with Copyright & Design/Developer Attribution */}
@@ -210,7 +153,7 @@ export const Footer: React.FC = () => {
           
           <div className="flex items-center gap-1.5 bg-zinc-950 border border-zinc-800/80 px-3 py-1.5 rounded-full">
             <span className="text-zinc-400">Designed & Developed by</span>
-            <span className="text-[#B0FF00] font-bold glow-accent-subtle">
+            <span className="text-[#C6FF00] font-bold">
               B Lalith Anjan
             </span>
           </div>
