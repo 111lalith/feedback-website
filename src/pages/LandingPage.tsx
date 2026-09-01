@@ -55,7 +55,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLookup }) => {
           
           {/* Top Badge */}
           <div className="flex flex-wrap items-center gap-3 mb-6">
-            <ChathuryaLogo size="sm" showTagline={true} />
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0d0d0d] border border-[#B0FF00]/40 text-xs font-mono text-[#B0FF00] glow-accent-subtle">
               <span className="w-2 h-2 rounded-full bg-[#B0FF00] animate-ping shrink-0" />
               <span>18-DAY FLAGSHIP TECHNICAL WORKSHOP</span>
